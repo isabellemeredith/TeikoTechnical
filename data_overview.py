@@ -1,5 +1,10 @@
-import streamlit
+import streamlit as st
+import sqlite3
 
 if __name__ == "__main__":
-    print("Data Overview")
-    pass
+    connection = sqlite3.connect("cell-count.db")
+    cursor = connection.cursor()
+
+    st.title("Data Overview")
+
+    

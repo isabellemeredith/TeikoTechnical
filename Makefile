@@ -20,3 +20,7 @@ pipeline: ## Run the analysis pipeline
 	python data_overview.py
 	python statistical_analysis.py
 	python subset_analysis.py
+
+.PHONY: dashboard
+dashboard: ## Run the analysis dashboard
+	streamlit run data_overview.py
