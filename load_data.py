@@ -14,9 +14,11 @@ if __name__ == "__main__":
         conn = sqlite3.connect(db_filepath)
         cursor = conn.cursor()
 
+        # Include a project description column despite it missing from the data for scalability
         project_creation_query = """
             CREATE TABLE PROJECT (
-                ProjectID VARCHAR(255) NOT NULL,
+                ProjectID INTEGER PRIMARY KEY NOT NULL,
+                ProjectIDName VARCHAR(255) NOT NULL,
                 Desc VARCHAR(255)
             );
         """
@@ -29,14 +31,16 @@ if __name__ == "__main__":
         # exists to cheaply locate subjects that fulfill a condition
         subject_creation_query = """
             CREATE TABLE SUBJECT (
-                SubjectID VARCHAR(255) NOT NULL,
+                SubjectID INTEGER PRIMARY KEY NOT NULL,
+                SubjectIDName VARCHAR(255) NOT NULL,
                 Condition CHAR(25) NOT NULL,
                 Age INT,
                 Sex CHAR(1),
                 Treatment VARCHAR(255),
                 Response CHAR(1),
-                Project VARCHAR(255),
-                FOREIGN KEY(Project) REFERENCES PROJECT(ProjectID)
+                ProjectName VARCHAR(255),
+                ProjectID INTEGER,
+                FOREIGN KEY(ProjectID) REFERENCES PROJECT(ProjectID)
             );
         """
 
@@ -45,7 +49,8 @@ if __name__ == "__main__":
 
         sample_creation_query = """
             CREATE TABLE SAMPLE (
-                SampleID VARCHAR(255) NOT NULL,
+                SampleID INTEGER PRIMARY KEY NOT NULL,
+                SampleIDName VARCHAR(255) NOT NULL,
                 SampleType VARCHAR(255) NOT NULL,
                 Time_Since_Treatment CHAR(25) NOT NULL,
                 b_Cell INT,
@@ -53,10 +58,12 @@ if __name__ == "__main__":
                 cd4_T_Cell INT,
                 nk_cell INT,
                 monocyte INT,
-                Subject VARCHAR(255) NOT NULL,
-                Project VARCHAR(255),
-                FOREIGN KEY(Subject) REFERENCES SUBJECT(SubjectID),
-                FOREIGN KEY(Project) REFERENCES PROJECT(ProjectID)
+                SubjectName VARCHAR(255) NOT NULL,
+                ProjectName VARCHAR(255),
+                SubjectID INTEGER,
+                ProjectID INTEGER,
+                FOREIGN KEY(SubjectID) REFERENCES SUBJECT(SubjectID),
+                FOREIGN KEY(ProjectID) REFERENCES PROJECT(ProjectID)
             );
         """
 
@@ -65,14 +72,14 @@ if __name__ == "__main__":
 
         bulk_creation_query = """
             CREATE TABLE BULK (
-                ProjectID VARCHAR(255) NOT NULL,
-                SubjectID VARCHAR(255) NOT NULL,
+                ProjectIDName VARCHAR(255) NOT NULL,
+                SubjectIDName VARCHAR(255) NOT NULL,
                 Condition CHAR(25) NOT NULL,
                 Age INT,
                 Sex CHAR(1),
                 Treatment VARCHAR(255),
                 Response CHAR(1),
-                SampleID VARCHAR(255) NOT NULL,
+                SampleIDName VARCHAR(255) NOT NULL,
                 SampleType VARCHAR(255) NOT NULL,
                 Time_Since_Treatment CHAR(25) NOT NULL,
                 b_Cell INT,
@@ -100,9 +107,6 @@ if __name__ == "__main__":
                                             +' BULK'],
                                     capture_output=True)
             end_import = time.time()
-            cursor.execute("SELECT COUNT(*) FROM BULK")
-            result = cursor.fetchall()
-            print(result[0][0])
             print("Time for import load: {}".format(end_import - start_import))
         except:
             # If this fails then attempt the Pandas to_sql instead
@@ -113,25 +117,53 @@ if __name__ == "__main__":
             table_name = "BULK"
             pd.read_csv(csv_filepath).to_sql(table_name, conn, if_exists='delete_rows', index=False)
             end_pandas = time.time()
-            cursor.execute("SELECT * FROM BULK")
-            result = cursor.fetchall()
-            print(result)
             print("Time for Pandas load: {}".format(end_pandas - start_pandas))
 
         print("Database setup complete")
 
-        # project_insertion_query = """
-        #     INSERT INTO PROJECT (ProjectID) SELECT DISTINCT ProjectID FROM BULK;
-        # """
-        # cursor.execute(project_insertion_query)
+        project_insertion_query = """
+            INSERT INTO PROJECT (ProjectIDName) SELECT DISTINCT ProjectIDName FROM BULK;
+        """
+        cursor.execute(project_insertion_query)
 
-        # subject_insertion_query = """
-        #     INSERT INTO SUBJECT () VALUES ();
-        # """
+        cursor.execute("SELECT * FROM PROJECT")
+        result = cursor.fetchall()
+        print(result)
 
-        # sample_insertion_query = """
-        #     INSERT INTO SAMPLE () VALUES ();
-        # """
+        subject_insertion_query = """
+            INSERT INTO SUBJECT (SubjectIDName, Condition, Age, Sex, Treatment, Response, ProjectName, ProjectID) 
+            SELECT SubjectIDName, Condition, Age, Sex, Treatment, Response, BULK.ProjectIDName, ProjectID
+            FROM BULK INNER JOIN PROJECT 
+            ON PROJECT.ProjectIDName = BULK.ProjectIDName
+            GROUP BY SubjectIDName;
+        """
+
+        cursor.execute(subject_insertion_query)
+
+        cursor.execute("SELECT * FROM SUBJECT")
+        result = cursor.fetchall()
+        print(result)
+
+        cursor.execute("SELECT COUNT(*) FROM SUBJECT")
+        result = cursor.fetchall()
+        print(result)
+
+        sample_insertion_query = """
+            INSERT INTO SAMPLE (SampleIDName, SampleType, Time_Since_Treatment, b_Cell, cd8_T_Cell, cd4_T_Cell, nk_cell, monocyte, SubjectName, ProjectName, SubjectID, ProjectID) 
+            SELECT SampleIDName, SampleType, Time_Since_Treatment, b_Cell, cd8_T_Cell, cd4_T_Cell, nk_cell, monocyte, BULK.SubjectIDName, ProjectName, SubjectID, ProjectID
+            FROM BULK INNER JOIN SUBJECT 
+            ON SUBJECT.SubjectIDName = BULK.SubjectIDName;
+        """
+
+        cursor.execute(sample_insertion_query)
+
+        cursor.execute("SELECT * FROM SAMPLE")
+        result = cursor.fetchall()
+        print(result)
+
+        cursor.execute("SELECT COUNT(*) FROM SAMPLE")
+        result = cursor.fetchall()
+        print(result)
 
     except Exception as e:
         print(f"An error occurred: {e}")
