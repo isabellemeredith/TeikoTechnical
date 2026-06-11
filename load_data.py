@@ -1,10 +1,8 @@
 import sqlite3
 import pandas as pd
 
-import time
 from pathlib import Path
 import subprocess
-import pdb
 
 if __name__ == "__main__":
     csv_filepath = "./Data/cell-count.csv"
@@ -38,7 +36,7 @@ if __name__ == "__main__":
                 Sex CHAR(1),
                 Treatment VARCHAR(255),
                 Response CHAR(1),
-                ProjectName VARCHAR(255),
+                ProjectIDName VARCHAR(255),
                 ProjectID INTEGER,
                 FOREIGN KEY(ProjectID) REFERENCES PROJECT(ProjectID)
             );
@@ -58,8 +56,8 @@ if __name__ == "__main__":
                 cd4_T_Cell INT,
                 nk_cell INT,
                 monocyte INT,
-                SubjectName VARCHAR(255) NOT NULL,
-                ProjectName VARCHAR(255),
+                SubjectIDName VARCHAR(255) NOT NULL,
+                ProjectIDName VARCHAR(255),
                 SubjectID INTEGER,
                 ProjectID INTEGER,
                 FOREIGN KEY(SubjectID) REFERENCES SUBJECT(SubjectID),
@@ -94,7 +92,6 @@ if __name__ == "__main__":
         
         try:
             # Attempting the sqlite CLI first as it is faster for large files
-            start_import = time.time()
             db_name = Path(db_filepath).resolve()
             csv_file = Path(csv_filepath).resolve()
             if not csv_file.exists():
@@ -106,64 +103,43 @@ if __name__ == "__main__":
                                     '.import --skip 1 ' + str(csv_file)
                                             +' BULK'],
                                     capture_output=True)
-            end_import = time.time()
-            print("Time for import load: {}".format(end_import - start_import))
         except:
             # If this fails then attempt the Pandas to_sql instead
             # May remove this later but there seems to be a potential issue with windows filepaths using the CLI import
             # that I haven't been able to test
             # but wouldn't affect the pandas method
-            start_pandas = time.time()
             table_name = "BULK"
             pd.read_csv(csv_filepath).to_sql(table_name, conn, if_exists='delete_rows', index=False)
-            end_pandas = time.time()
-            print("Time for Pandas load: {}".format(end_pandas - start_pandas))
 
-        print("Database setup complete")
 
         project_insertion_query = """
             INSERT INTO PROJECT (ProjectIDName) SELECT DISTINCT ProjectIDName FROM BULK;
         """
         cursor.execute(project_insertion_query)
 
-        cursor.execute("SELECT * FROM PROJECT")
-        result = cursor.fetchall()
-        print(result)
-
         subject_insertion_query = """
-            INSERT INTO SUBJECT (SubjectIDName, Condition, Age, Sex, Treatment, Response, ProjectName, ProjectID) 
+            INSERT INTO SUBJECT (SubjectIDName, Condition, Age, Sex, Treatment, Response, ProjectIDName, ProjectID) 
             SELECT SubjectIDName, Condition, Age, Sex, Treatment, Response, BULK.ProjectIDName, ProjectID
             FROM BULK INNER JOIN PROJECT 
             ON PROJECT.ProjectIDName = BULK.ProjectIDName
-            GROUP BY SubjectIDName;
+            GROUP BY SubjectIDName, BULK.ProjectIDName;
         """
 
         cursor.execute(subject_insertion_query)
 
-        cursor.execute("SELECT * FROM SUBJECT")
-        result = cursor.fetchall()
-        print(result)
-
-        cursor.execute("SELECT COUNT(*) FROM SUBJECT")
-        result = cursor.fetchall()
-        print(result)
-
         sample_insertion_query = """
-            INSERT INTO SAMPLE (SampleIDName, SampleType, Time_Since_Treatment, b_Cell, cd8_T_Cell, cd4_T_Cell, nk_cell, monocyte, SubjectName, ProjectName, SubjectID, ProjectID) 
-            SELECT SampleIDName, SampleType, Time_Since_Treatment, b_Cell, cd8_T_Cell, cd4_T_Cell, nk_cell, monocyte, BULK.SubjectIDName, ProjectName, SubjectID, ProjectID
+            INSERT INTO SAMPLE (SampleIDName, SampleType, Time_Since_Treatment, b_Cell, cd8_T_Cell, cd4_T_Cell, nk_cell, monocyte, SubjectIDName, ProjectIDName, SubjectID, ProjectID) 
+            SELECT SampleIDName, SampleType, Time_Since_Treatment, b_Cell, cd8_T_Cell, cd4_T_Cell, nk_cell, monocyte, BULK.SubjectIDName, BULK.ProjectIDName, SubjectID, ProjectID
             FROM BULK INNER JOIN SUBJECT 
-            ON SUBJECT.SubjectIDName = BULK.SubjectIDName;
+            ON SUBJECT.SubjectIDName = BULK.SubjectIDName
+            AND SUBJECT.ProjectIDName = BULK.ProjectIDName;
         """
 
         cursor.execute(sample_insertion_query)
 
-        cursor.execute("SELECT * FROM SAMPLE")
-        result = cursor.fetchall()
-        print(result)
+        cursor.execute("DROP TABLE IF EXISTS BULK")
 
-        cursor.execute("SELECT COUNT(*) FROM SAMPLE")
-        result = cursor.fetchall()
-        print(result)
+        print("Database setup complete")
 
     except Exception as e:
         print(f"An error occurred: {e}")
