@@ -139,6 +139,8 @@ if __name__ == "__main__":
 
         cursor.execute("DROP TABLE IF EXISTS BULK")
 
+        conn.commit()
+
         print("Database setup complete")
 
     except Exception as e:
