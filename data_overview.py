@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
+
 import utils.display as display
 
 
@@ -26,7 +27,6 @@ if __name__ == "__main__":
 
     display.display_paginated_dataframe(dfPopulation)
 
-    # st.dataframe(dfPopulation)
 
     
 
