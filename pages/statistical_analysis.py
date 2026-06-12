@@ -4,9 +4,6 @@ import sqlite3
 import plotly.express as px
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-# import gpboost as gpb
-# import numpy as np
-# import scipy.stats
 
 import utils.display as display
 
@@ -14,24 +11,6 @@ import utils.display as display
 if __name__ == "__main__":
     conn = sqlite3.connect("cell-count.db")
     cursor = conn.cursor()
-    
-    analysis_view_query = """
-        CREATE VIEW analysis 
-        AS
-        SELECT population_id, POPULATION.sample_id, POPULATION.sample_id_text, population_name, SUM(count) OVER (PARTITION BY POPULATION.sample_id) AS total_count, count, 1.0 * count / SUM(count) OVER (PARTITION BY POPULATION.sample_id) AS percentage, condition, response, sample_type, treatment, time_from_treatment_start, age, sex
-        FROM (POPULATION JOIN SAMPLE 
-        ON POPULATION.sample_id = SAMPLE.sample_id
-        JOIN SUBJECT
-        ON SAMPLE.subject_id = SUBJECT.subject_id) 
-        WHERE sample_type = "PBMC"
-        AND condition = "melanoma"
-        AND treatment = "miraclib"
-        AND response IS NOT NULL;
-    """
-
-
-    cursor.execute("DROP VIEW IF EXISTS analysis;")
-    cursor.execute(analysis_view_query)
 
     get_analysis_data_query = "SELECT * FROM analysis;"
     dfAnalysis = display.get_data(get_analysis_data_query, conn)
