@@ -23,4 +23,4 @@ pipeline: ## Run the analysis pipeline
 
 .PHONY: dashboard
 dashboard: ## Run the analysis dashboard
-	streamlit run data_overview.py
+	streamlit run dashboard.py
