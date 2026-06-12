@@ -17,10 +17,12 @@ venv:  ## Create virtual environment
 .PHONY: pipeline
 pipeline: ## Run the analysis pipeline
 	python load_data.py
-	python data_overview.py
-	python statistical_analysis.py
-	python subset_analysis.py
+	python analysis.py
 
 .PHONY: dashboard
 dashboard: ## Run the analysis dashboard
+	streamlit run dashboard.py
+
+.PHONY: test
+test: ## Run the unit tests
 	streamlit run dashboard.py

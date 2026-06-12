@@ -4,13 +4,17 @@ import sqlite3
 import plotly.express as px
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import os
 
 import utils.display as display
+import analysis
 
 
 if __name__ == "__main__":
     conn = sqlite3.connect("cell-count.db")
     cursor = conn.cursor()
+
+    analysis.create_analysis_view(conn)
 
     get_analysis_data_query = "SELECT * FROM analysis;"
     dfAnalysis = display.get_data(get_analysis_data_query, conn)
@@ -30,45 +34,21 @@ if __name__ == "__main__":
 
     st.text("The relationship between cell population frequency and miraclib response was evaluated using a linear mixed effects model to account for the repeated measures at different study time points. Note that statistically significant is not equivalent to clinically relevant.")
 
-    dfAnalysis["binary_response"] = dfAnalysis['response'].map({'yes':1, 'no':0})
-    dfAnalysis["binary_sex"] = dfAnalysis['sex'].map({'M':1, 'F':0})
+    if os.path.exists("./output/analysis_results.csv"):
+        dfResults = pd.read_csv("./output/analysis_results.csv")
+    else:
+        dfResults = analysis.get_responder_diff(dfAnalysis)
     
+    # dfResults.set_index("population_name", inplace=True)
     population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"}
     
     multiple_comparisons = 1.0
     for population in dfAnalysis["population_name"].unique():
         st.subheader(population_dict[population])
-        print(population_dict[population])
-        data = dfAnalysis.loc[dfAnalysis["population_name"] == population]
 
-        # gp_model = gpb.GPModel(group_data=data["sample_id"], likelihood="binary")
-        # x = sm.tools.tools.add_constant(data["binary_response"])
-
-        # result = gp_model.fit(y=data["percentage"], X=x)
-        # print(result.summary())
-
-        # gp_model = gpb.GPModel(group_data=data["sample_id"], likelihood="binary")
-        # x = sm.tools.tools.add_constant(data[["percentage", "age", "binary_sex"]])
-
-        # result = gp_model.fit(y=data["binary_response"], X=x)
-        # print(result.summary())
-        # coefs = result.get_coef(std_err=True)
-        # z_values = np.array(coefs.iloc[0] / coefs.iloc[1])
-        # p_values = 2 * scipy.stats.norm.cdf(-np.abs(z_values))
-
-        model = smf.mixedlm("percentage ~ binary_response", data, groups=data["sample_id"])
-        model_fit = model.fit()
-        print(model_fit.summary())
-
-        print(model_fit.fe_params["binary_response"])
-
-        coef = model_fit.fe_params["binary_response"]
-        p_value = model_fit.pvalues["binary_response"]
-        significant = (multiple_comparisons * p_value) < 0.05
-
-        if significant:
-            st.text("There was a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.3f}). Responders had a {coef:3.2f} higher frequency of {type}s".format(type=population_dict[population], pvalue=p_value, coef=coef))
+        if dfResults.at[population, "significant"]:
+            st.text("There was a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.3f}). Responders had a {coef:3.2f} higher frequency of {type}s".format(type=population_dict[population], pvalue=dfResults.at[population, "p_value"], coef=dfResults.at[population, "coef"]))
         else:
-            st.text("There was not a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.4f}).".format(type=population_dict[population], pvalue=p_value))
+            st.text("There was not a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.4f}).".format(type=population_dict[population], pvalue=dfResults.at[population, "p_value"]))
         
         
