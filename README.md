@@ -76,4 +76,5 @@ The analysis is separate from the dashboard in order to simplify running the pip
 
 ## Dashboard
 
+The locally hosted dashboard is located at:
 ```http://localhost:8501/```
