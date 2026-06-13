@@ -25,12 +25,16 @@ if __name__ == "__main__":
     else:
         selected_rows = dfAnalysis["time_from_treatment_start"] == str(time_point)
 
-    fig = px.box(dfAnalysis.loc[selected_rows], x="population_name", y="percentage", color="response")
+    population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"}
+
+    fig = px.box(dfAnalysis.loc[selected_rows].replace(population_dict), x="population_name", y="percentage", color="response", 
+                 title="Relative Cell Population Percentages by Response to Miraclib in Melanoma Patients", 
+                 labels={"population_name": "Cell Population Name", "percentage": "Percentage", "response": "Responded to Miraclib"})
     st.plotly_chart(fig, theme="streamlit", width="stretch")
 
     st.header("Association Between Cell Type and Responder Status")
 
-    st.text("The relationship between cell population frequency and miraclib response was evaluated using a linear mixed effects model to account for the repeated measures at different study time points. Note that statistically significant is not equivalent to clinically relevant.")
+    st.text("The relationship between cell population frequency and miraclib response was evaluated using a linear mixed effects model with subject id as a random effect and response as a main effect to account for the repeated measures at different study time points. Note that statistically significant is not equivalent to clinically relevant.")
 
     if os.path.exists("./output/analysis_results.csv"):
         dfResults = pd.read_csv("./output/analysis_results.csv")
@@ -38,7 +42,6 @@ if __name__ == "__main__":
         dfResults = analysis.get_responder_diff(dfAnalysis)
     
     # dfResults.set_index("population_name", inplace=True)
-    population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"}
     
     multiple_comparisons = 1.0
     for population in dfAnalysis["population_name"].unique():

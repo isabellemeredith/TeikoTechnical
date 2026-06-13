@@ -35,6 +35,6 @@ if __name__ == "__main__":
     st.dataframe(sex_counts.reset_index().rename(columns={"sex": "Sex", "count": "Number of Subjects"}), hide_index=True)
     fig = px.bar(response_counts, x=response_counts.index, y='count', color=response_counts.index, title="Counts by Response", labels={'x':'Response', 'count': 'Number of Subjects'})
     st.plotly_chart(fig, theme="streamlit", width="stretch")
-    st.dataframe(response_counts.reset_index().rename(columns={"response": "Response", "count": "Number of Subjects"}), hide_index=True)
+    st.dataframe(response_counts.reset_index().rename(columns={"response": "Responded to Miraclib", "count": "Number of Subjects"}), hide_index=True)
 
 
