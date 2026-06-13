@@ -64,7 +64,7 @@ def get_responder_diff(dfAnalysis, multiple_comparisons = 1.0):
         data = dfAnalysis.loc[dfAnalysis["population_name"] == population]
 
         model = smf.mixedlm("percentage ~ binary_response", data, groups=data["sample_id"])
-        model_fit = model.fit()
+        model_fit = model.fit(method=["lbfgs", "Nelder-Mead", "Newton-CG"])
 
         coef = model_fit.fe_params["binary_response"]
         dfResults.at[population, "coef"] = coef
