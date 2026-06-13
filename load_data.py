@@ -86,7 +86,7 @@ def setup_tables(conn):
     conn.commit()
 
 if __name__ == "__main__":
-    csv_filepath = "./Data/cell-count.csv"
+    csv_filepath = "./data/cell-count.csv"
     db_filepath = "cell-count.db"
 
     if os.path.exists(db_filepath):
