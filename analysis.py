@@ -9,7 +9,7 @@ def create_summary_view(conn):
     summary_view_query = """
         CREATE VIEW populations_summary 
         AS
-        SELECT sample_id_text AS sample, population_name AS population, SUM(count) OVER (PARTITION BY sample_id) AS total_count, count, 1.0 * count / SUM(count) OVER (PARTITION BY sample_id) AS percentage FROM POPULATION;
+        SELECT sample_id_text AS sample, population_name AS population, SUM(count) OVER (PARTITION BY sample_id) AS total_count, count, 1.0 * count / SUM(count) * 100.0 OVER (PARTITION BY sample_id) AS percentage FROM POPULATION;
     """
     cursor.execute("DROP VIEW IF EXISTS populations_summary;")
     cursor.execute(summary_view_query)
@@ -19,7 +19,7 @@ def create_analysis_view(conn):
     analysis_view_query = """
         CREATE VIEW analysis 
         AS
-        SELECT population_id, POPULATION.sample_id, POPULATION.sample_id_text, population_name, SUM(count) OVER (PARTITION BY POPULATION.sample_id) AS total_count, count, 1.0 * count / SUM(count) OVER (PARTITION BY POPULATION.sample_id) AS percentage, condition, response, sample_type, treatment, time_from_treatment_start, age, sex
+        SELECT population_id, POPULATION.sample_id, POPULATION.sample_id_text, population_name, SUM(count) OVER (PARTITION BY POPULATION.sample_id) AS total_count, count, 1.0 * count / SUM(count) * 100.0 OVER (PARTITION BY POPULATION.sample_id) AS percentage, condition, response, sample_type, treatment, time_from_treatment_start, age, sex
         FROM (POPULATION JOIN SAMPLE 
         ON POPULATION.sample_id = SAMPLE.sample_id
         JOIN SUBJECT
@@ -33,6 +33,7 @@ def create_analysis_view(conn):
     cursor.execute("DROP VIEW IF EXISTS analysis;")
     cursor.execute(analysis_view_query)
 
+
 def create_project_view(conn):
     cursor = conn.cursor()
     project_view_query = """
@@ -40,7 +41,6 @@ def create_project_view(conn):
         AS
         SELECT sample_id, sample_id_text, SUBJECT.subject_id, SUBJECT.subject_id_text, SUBJECT.project_id_text, response, sex, sample_type, condition, treatment, time_from_treatment_start
         FROM SUBJECT
-        JOIN PROJECT ON SUBJECT.project_id = PROJECT.project_id
         JOIN SAMPLE ON SAMPLE.subject_id = SUBJECT.subject_id
         WHERE sample_type = "PBMC"
         AND condition = "melanoma"
@@ -96,3 +96,19 @@ if __name__ == "__main__":
     get_project_data_query = "SELECT * FROM projects_summary ORDER BY project_id_text;"
     dfProjects = display.get_data(get_project_data_query, conn)
     dfProjects.to_csv("./output/miraclib_melanoma_baseline_subset.csv")
+
+    get_part_five_average_query = """
+        SELECT AVG(count)
+        FROM POPULATION 
+        JOIN SAMPLE ON POPULATION.sample_id = SAMPLE.sample_id
+        JOIN SUBJECT ON SAMPLE.subject_id = SUBJECT.subject_id
+        WHERE population_name = "b_cell"
+        AND treatment = "miraclib"
+        AND condition = "melanoma"
+        AND response = "yes"
+        AND sex = "M"
+        AND time_from_treatment_start = 0;
+    """
+    cursor.execute(get_part_five_average_query)
+    result = cursor.fetchall()
+    print("Average number of B cells for melanoma males who were responders at time=0", result)

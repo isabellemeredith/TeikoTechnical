@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import plotly.express as px
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
 import os
 
 import utils.display as display
@@ -47,7 +45,9 @@ if __name__ == "__main__":
         st.subheader(population_dict[population])
 
         if dfResults.at[population, "significant"]:
-            st.text("There was a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.3f}). Responders had a {coef:3.2f} higher frequency of {type}s".format(type=population_dict[population], pvalue=dfResults.at[population, "p_value"], coef=dfResults.at[population, "coef"]))
+            coef=dfResults.at[population, "coef"]
+            difference = "higher" if coef > 0 else "lower"
+            st.text("There was a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.3f}). Responders had {coef:3.2f} {difference} percentage points of {type}s".format(type=population_dict[population], pvalue=dfResults.at[population, "p_value"], coef=coef, difference=difference))
         else:
             st.text("There was not a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.4f}).".format(type=population_dict[population], pvalue=dfResults.at[population, "p_value"]))
         

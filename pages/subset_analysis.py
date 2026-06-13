@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
+import plotly.express as px
 
 import utils.display as display
 import analysis
@@ -21,11 +22,19 @@ if __name__ == "__main__":
     display.display_paginated_dataframe(dfProjects[["project_id_text", "subject_id_text", "sample_id_text", "response", "sex"]].rename(columns=readable_columns))
 
     project_counts = dfProjects["project_id_text"].value_counts()
-    sex_counts = dfProjects["sex"].value_counts()
-    response_counts = dfProjects["response"].value_counts()
 
-    st.dataframe(project_counts)
-    st.dataframe(sex_counts)
-    st.dataframe(response_counts)
+    dfProjectsSubjectLevel = dfProjects.drop_duplicates(subset="subject_id_text")
+    sex_counts = dfProjectsSubjectLevel["sex"].value_counts()
+    response_counts = dfProjectsSubjectLevel["response"].value_counts()
+
+    fig = px.bar(project_counts, x=project_counts.index, y='count', color=project_counts.index, title="Counts by Project", labels={'x':'Project', 'count': 'Number of Subjects'})
+    st.plotly_chart(fig, theme="streamlit", width="stretch")
+    st.dataframe(project_counts.reset_index().rename(columns={"project_id_text": "Project", "count": "Number of Samples"}), hide_index=True)
+    fig = px.bar(sex_counts, x=sex_counts.index, y='count', color=sex_counts.index, title="Counts by Sex", labels={'x':'Sex', 'count': 'Number of Subjects'})
+    st.plotly_chart(fig, theme="streamlit", width="stretch")
+    st.dataframe(sex_counts.reset_index().rename(columns={"sex": "Sex", "count": "Number of Subjects"}), hide_index=True)
+    fig = px.bar(response_counts, x=response_counts.index, y='count', color=response_counts.index, title="Counts by Response", labels={'x':'Response', 'count': 'Number of Subjects'})
+    st.plotly_chart(fig, theme="streamlit", width="stretch")
+    st.dataframe(response_counts.reset_index().rename(columns={"response": "Response", "count": "Number of Subjects"}), hide_index=True)
 
 
