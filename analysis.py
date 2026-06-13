@@ -78,7 +78,7 @@ def get_responder_diff(dfAnalysis, multiple_comparisons = 1.0):
 
 def get_responder_summary(conn):
     responder_query = """
-        SELECT population_name, response, AVG(percentage), MIN(percentage), MAX(percentage) 
+        SELECT population_name, response, AVG(percentage), MIN(percentage), MAX(percentage), COUNT(percentage) 
         FROM analysis
         GROUP BY response, population_name
         ORDER BY population_name;
@@ -92,6 +92,10 @@ def get_population_fig(dfAnalysis, selected_rows,
                  title="Relative Cell Population Percentage of Sample by Response to Miraclib in Melanoma Patients", 
                  labels={"population_name": "Cell Population Name", "percentage": "Percentage", "response": "Responded to Miraclib"})
     return fig
+
+def get_counts(df, selection):
+    dfCounts = df[selection].value_counts()
+    return dfCounts
 
 
 if __name__ == "__main__":
@@ -121,6 +125,15 @@ if __name__ == "__main__":
     get_project_data_query = "SELECT * FROM projects_summary ORDER BY project_id_text;"
     dfProjects = get_data(get_project_data_query, conn)
     dfProjects.to_csv("./output/miraclib_melanoma_baseline_subset.csv")
+
+    project_counts = get_counts(dfProjects, "project_id_text")
+    project_counts.to_csv("./output/miraclib_melanoma_baseline_project_counts.csv")
+
+    dfProjectsSubjectLevel = dfProjects.drop_duplicates(subset="subject_id_text")
+    sex_counts = get_counts(dfProjectsSubjectLevel, "sex")
+    sex_counts.to_csv("./output/miraclib_melanoma_baseline_sex_counts.csv")
+    response_counts = get_counts(dfProjectsSubjectLevel, "response")
+    response_counts.to_csv("./output/miraclib_melanoma_baseline_response_counts.csv")
 
     get_part_five_average_query = """
         SELECT AVG(count)

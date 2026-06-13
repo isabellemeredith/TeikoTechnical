@@ -21,11 +21,11 @@ if __name__ == "__main__":
 
     display.display_paginated_dataframe(dfProjects[["project_id_text", "subject_id_text", "sample_id_text", "response", "sex"]].rename(columns=readable_columns))
 
-    project_counts = dfProjects["project_id_text"].value_counts()
+    project_counts = analysis.get_counts(dfProjects, "project_id_text")
 
     dfProjectsSubjectLevel = dfProjects.drop_duplicates(subset="subject_id_text")
-    sex_counts = dfProjectsSubjectLevel["sex"].value_counts()
-    response_counts = dfProjectsSubjectLevel["response"].value_counts()
+    sex_counts = analysis.get_counts(dfProjectsSubjectLevel, "sex")
+    response_counts = analysis.get_counts(dfProjectsSubjectLevel, "response")
 
     fig = px.bar(project_counts, x=project_counts.index, y='count', color=project_counts.index, title="Counts by Project", labels={'x':'Project', 'count': 'Number of Subjects'})
     st.plotly_chart(fig, theme="streamlit", width="stretch")

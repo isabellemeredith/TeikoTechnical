@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import plotly.express as px
-import os
 
 import utils.display as display
 import analysis
@@ -31,7 +30,7 @@ if __name__ == "__main__":
     st.plotly_chart(fig, theme="streamlit", width="stretch")
 
     dfResponderSummary = analysis.get_responder_summary(conn)
-    st.table(dfResponderSummary.replace(population_dict).rename(columns={"population_name": "Cell Population Name", "response": "Responded to Miraclib", "AVG(percentage)": "Mean Cell Sample Percentage", "MIN(percentage)": "Minimum Cell Sample Percentage", "MAX(percentage)": "Maximum Cell Sample Percentage"}), hide_index=True)
+    st.table(dfResponderSummary.replace(population_dict).rename(columns={"population_name": "Cell Population Name", "response": "Responded to Miraclib", "AVG(percentage)": "Mean Cell Sample Percentage", "MIN(percentage)": "Minimum Cell Sample Percentage", "MAX(percentage)": "Maximum Cell Sample Percentage", "COUNT(percentage)": "Number of Samples"}), hide_index=True)
 
     st.header("Association Between Cell Type and Responder Status")
 
