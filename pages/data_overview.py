@@ -17,9 +17,7 @@ if __name__ == "__main__":
 
     st.title("Data Overview")
 
+    st.header("Frequency of each cell type in each sample")
+
     display.display_paginated_dataframe(dfPopulation)
-
-
     
-
-

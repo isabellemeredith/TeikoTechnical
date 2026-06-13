@@ -19,6 +19,7 @@ if __name__ == "__main__":
 
     st.title("Miraclib Responder Analysis")
     
+    # Optional plotting by time point
     time_point = st.selectbox("Time Point", options=["All", 0, 7, 14]) 
     if time_point == "All":
         selected_rows = slice(None)
@@ -30,6 +31,7 @@ if __name__ == "__main__":
     fig = analysis.get_population_fig(dfAnalysis, selected_rows)
     st.plotly_chart(fig, theme="streamlit", width="stretch")
 
+    # Summary table for responders vs nonresponders
     dfResponderSummary = analysis.get_responder_summary(conn)
     st.table(dfResponderSummary.replace(population_dict).rename(columns={"population_name": "Cell Population Name", "response": "Responded to Miraclib", "AVG(percentage)": "Mean Cell Sample Percentage", "MIN(percentage)": "Minimum Cell Sample Percentage", "MAX(percentage)": "Maximum Cell Sample Percentage", "COUNT(percentage)": "Number of Samples"}), hide_index=True)
 
@@ -42,6 +44,7 @@ if __name__ == "__main__":
     for population in dfAnalysis["population_name"].unique():
         st.subheader(population_dict[population])
 
+        # Write interpretation of analysis based on whether or not the result was significant
         if dfResults.at[population, "significant"]:
             coef=dfResults.at[population, "coef"]
             difference = "higher" if coef > 0 else "lower"

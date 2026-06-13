@@ -4,15 +4,31 @@ import pandas as pd
 
 @st.cache_data()
 def get_data(data_query, _connection):
+    """Take a SQLite query and database connection and return a Pandas dataframe of the results 
+
+    Keyword arguments:
+    conn -- SQLite database connection
+    """
     df = pd.read_sql_query(data_query, _connection)
     return df
 
 @st.cache_data(show_spinner=False)
 def split_frame(input_df, rows):
+    """Return a list of subsets of a dataframe 
+
+    Keyword arguments:
+    input_df - Pandas dataframe to be subset
+    rows - number of rows per subset
+    """
     df = [input_df.loc[i : i + rows - 1, :] for i in range(0, len(input_df), rows)]
     return df
 
 def display_paginated_dataframe(data):
+    """Display a paginated dataframe using Streamlit
+
+    Keyword arguments:
+    data - Pandas dataframe to be displayed
+    """
     top_menu = st.columns(3)
     with top_menu[0]:
         sort = st.radio("Sort Data", options=["Yes", "No"], horizontal=1, index=1)

@@ -8,6 +8,12 @@ import csv
 
 
 def setup_tables(conn):
+    """Build the database schema
+
+    Keyword arguments:
+    conn -- SQLite database connection
+    """
+
     cursor = conn.cursor()
 
     # Include a project description column despite it missing from the data for scalability
@@ -24,9 +30,6 @@ def setup_tables(conn):
     cursor.execute("DROP TABLE IF EXISTS PROJECT")
     cursor.execute(project_creation_query)
 
-
-    # crossover trials change treatment partway through, put it in sample?
-    # exists to cheaply locate subjects that fulfill a condition
     subject_creation_query = """
         CREATE TABLE SUBJECT (
             subject_id INTEGER PRIMARY KEY NOT NULL,

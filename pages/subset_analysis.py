@@ -20,6 +20,7 @@ if __name__ == "__main__":
 
     st.title("Data Subset")
 
+    st.header("Melanoma Miraclib Response Data Subset")
     display.display_paginated_dataframe(dfProjects[["project_id_text", "subject_id_text", "sample_id_text", "response", "sex"]].rename(columns=readable_columns))
 
     project_counts = analysis.get_counts(dfProjects, "project_id_text")
@@ -28,6 +29,7 @@ if __name__ == "__main__":
     sex_counts = analysis.get_counts(dfProjectsSubjectLevel, "sex")
     response_counts = analysis.get_counts(dfProjectsSubjectLevel, "response")
 
+    st.header("Melanoma Miraclib Sample and Subject Counts")
     fig = px.bar(project_counts, x=project_counts.index, y='count', color=project_counts.index, title="Counts by Project", labels={'x':'Project', 'count': 'Number of Subjects'})
     st.plotly_chart(fig, theme="streamlit", width="stretch")
     st.dataframe(project_counts.reset_index().rename(columns={"project_id_text": "Project", "count": "Number of Samples"}), hide_index=True)
@@ -37,5 +39,7 @@ if __name__ == "__main__":
     fig = px.bar(response_counts, x=response_counts.index, y='count', color=response_counts.index, title="Counts by Response", labels={'x':'Response', 'count': 'Number of Subjects'})
     st.plotly_chart(fig, theme="streamlit", width="stretch")
     st.dataframe(response_counts.reset_index().rename(columns={"response": "Responded to Miraclib", "count": "Number of Subjects"}), hide_index=True)
+
+    st.text("Average number of B cells for melanoma males who were responders at time=0: {}".format(analysis.get_melanoma_male_avg(conn)))
 
 
