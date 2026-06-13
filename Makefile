@@ -21,8 +21,4 @@ pipeline: ## Run the analysis pipeline
 
 .PHONY: dashboard
 dashboard: ## Run the analysis dashboard
-	streamlit run dashboard.py
-
-.PHONY: test
-test: ## Run the unit tests
-	streamlit run dashboard.py
+	python -m streamlit run dashboard.py
