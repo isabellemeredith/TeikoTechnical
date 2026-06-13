@@ -9,7 +9,7 @@ def create_summary_view(conn):
     summary_view_query = """
         CREATE VIEW populations_summary 
         AS
-        SELECT sample_id_text AS sample, population_name AS population, SUM(count) OVER (PARTITION BY sample_id) AS total_count, count, 1.0 * count / SUM(count) * 100.0 OVER (PARTITION BY sample_id) AS percentage FROM POPULATION;
+        SELECT sample_id_text AS sample, population_name AS population, SUM(count) OVER (PARTITION BY sample_id) AS total_count, count, 100.0 * count / SUM(count) OVER (PARTITION BY sample_id) AS percentage FROM POPULATION;
     """
     cursor.execute("DROP VIEW IF EXISTS populations_summary;")
     cursor.execute(summary_view_query)
@@ -19,7 +19,7 @@ def create_analysis_view(conn):
     analysis_view_query = """
         CREATE VIEW analysis 
         AS
-        SELECT population_id, POPULATION.sample_id, POPULATION.sample_id_text, population_name, SUM(count) OVER (PARTITION BY POPULATION.sample_id) AS total_count, count, 1.0 * count / SUM(count) * 100.0 OVER (PARTITION BY POPULATION.sample_id) AS percentage, condition, response, sample_type, treatment, time_from_treatment_start, age, sex
+        SELECT population_id, POPULATION.sample_id, POPULATION.sample_id_text, population_name, SUM(count) OVER (PARTITION BY POPULATION.sample_id) AS total_count, count, 100.0 * count / SUM(count) OVER (PARTITION BY POPULATION.sample_id) AS percentage, condition, response, sample_type, treatment, time_from_treatment_start, age, sex
         FROM (POPULATION JOIN SAMPLE 
         ON POPULATION.sample_id = SAMPLE.sample_id
         JOIN SUBJECT
