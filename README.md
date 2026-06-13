@@ -1,5 +1,9 @@
 # TeikoTechnical
 
+Create a SQLite database for cell count data and run an analysis pipeline. 
+
+## Make commands
+
 To prepare the environment
 
 ```make setup```
@@ -15,6 +19,14 @@ To launch the analysis dashboard
 To perform unit tests
 
 ```make test```
+
+## Dashboard
+
+The locally hosted dashboard is located at:
+```http://localhost:8501/```
+
+When using GitHub Codespaces, the dashboard is hosted at:
+```<codespace-url>-8501.app.github.dev/```
 
 ## Database schema
 
@@ -81,8 +93,3 @@ The schema normalizes the data into five tables: PROJECT, SUBJECT, SAMPLE, and P
 ```
 
 The analysis is separate from the dashboard in order to simplify running the pipeline and improve debugging, as well as allow the dashboard pages to simply call functions. The dashboard has been separated into pages for clarity and to allow the complexity of the pages to grow without becoming unwieldy. 
-
-## Dashboard
-
-The locally hosted dashboard is located at:
-```http://localhost:8501/```
