@@ -2,6 +2,8 @@ import pandas as pd
 import sqlite3
 import statsmodels.formula.api as smf
 import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def get_data(data_query, _connection):
@@ -87,10 +89,17 @@ def get_responder_summary(conn):
     return df
     
 def get_population_fig(dfAnalysis, selected_rows, 
-                       population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"}):
-    fig = px.box(dfAnalysis.loc[selected_rows].replace(population_dict), x="population_name", y="percentage", color="response", 
+                       population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"},
+                       use_plotly=True):
+    if use_plotly:
+        fig = px.box(dfAnalysis.loc[selected_rows].replace(population_dict), x="population_name", y="percentage", color="response", 
                  title="Relative Cell Population Percentage of Sample by Response to Miraclib in Melanoma Patients", 
                  labels={"population_name": "Cell Population Name", "percentage": "Percentage", "response": "Responded to Miraclib"})
+    else:
+        boxplot = sns.boxplot(x="population_name",y="percentage",data=dfAnalysis.loc[selected_rows].replace(population_dict).replace({"yes": "responder", "no": "nonresponder"}),hue="response")
+        boxplot.set(title="Relative Cell Population Percentage of Sample by\nResponse to Miraclib in Melanoma Patients", xlabel="Cell Population Name", ylabel="Percentage")
+        fig = boxplot.get_figure()
+
     return fig
 
 def get_counts(df, selection):
@@ -115,8 +124,8 @@ if __name__ == "__main__":
     dfResponderSummary = get_responder_summary(conn)
     dfResponderSummary.to_csv("./output/miraclib_response_summary.csv")
 
-    fig = get_population_fig(dfAnalysis, selected_rows = slice(None))
-    fig.write_image("./output/population-percentages.png", width=1200, height=700)
+    fig = get_population_fig(dfAnalysis, selected_rows = slice(None), use_plotly=False)
+    fig.savefig("./output/population-percentages.png")
 
     dfResults = get_responder_diff(dfAnalysis)
     dfResults.to_csv("./output/miraclib_response_analysis_results.csv")
