@@ -90,6 +90,8 @@ The schema normalizes the data into five tables: PROJECT, SUBJECT, SAMPLE, and P
     └── subset_analysis.py      # Page for the selected subset of the data
 ├── utils/                      
     └── display.py              # Helper functions for streamlit rendering
+├── tests/                      
+    └── database_test.py        # Pytest tests to check if the data loaded correctly
 ```
 
-The analysis is separate from the dashboard in order to simplify running the pipeline and improve debugging, as well as allow the dashboard pages to simply call functions. The dashboard has been separated into pages for clarity and to allow the complexity of the pages to grow without becoming unwieldy. 
+The analysis is separate from the dashboard in order to simplify running the pipeline and improve debugging, as well as allow the dashboard pages to simply call functions and avoid redundant code. Launching the dashboard is in the root directory but the pages are in a subfolder for clarity and to allow the complexity of the pages to grow without becoming unwieldy in one main file. Tests are included to validate that the database is working as intended given the data. Output is stored in an output directory to avoid clutter.
