@@ -104,7 +104,7 @@ if __name__ == "__main__":
         dfProject = pd.DataFrame({"project_id_text": dfBulk["project_id_text"].unique(), "principal_investigator": "Bob Loblaw", "company": "Loblaw Bio"})
         dfProject.to_sql("PROJECT", conn, if_exists='append', index=False, method="multi")
 
-        dfBulk[["subject_id_text", "condition", "age", "sex", "treatment", "response", "project_id_text"]].to_sql("SUBJECT", conn, if_exists='append', index=False, method="multi")
+        dfBulk[["subject_id_text", "condition", "age", "sex", "treatment", "response", "project_id_text"]].drop_duplicates().to_sql("SUBJECT", conn, if_exists='append', index=False, method="multi")
 
         dfBulk[["sample_id_text", "sample_type", "time_from_treatment_start", "subject_id_text", "project_id_text"]].to_sql("SAMPLE", conn, if_exists='append', index=False, method="multi")
 
