@@ -8,6 +8,14 @@ To reproduce the analysis
 
 ```make pipeline```
 
+To launch the analysis dashboard
+
+```make dashboard```
+
+To perform unit tests
+
+```make test```
+
 ## Database schema
 
 ```
