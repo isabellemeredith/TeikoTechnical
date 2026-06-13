@@ -37,13 +37,6 @@ def create_analysis_view(conn):
     cursor.execute("DROP VIEW IF EXISTS analysis;")
     cursor.execute(analysis_view_query)
 
-def get_population_fig(dfAnalysis, selected_rows, 
-                       population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"}):
-    fig = px.box(dfAnalysis.loc[selected_rows].replace(population_dict), x="population_name", y="percentage", color="response", 
-                 title="Relative Cell Population Percentages by Response to Miraclib in Melanoma Patients", 
-                 labels={"population_name": "Cell Population Name", "percentage": "Percentage", "response": "Responded to Miraclib"})
-    return fig
-
 def create_project_view(conn):
     cursor = conn.cursor()
     project_view_query = """
@@ -66,7 +59,6 @@ def get_responder_diff(dfAnalysis, multiple_comparisons = 1.0):
     dfAnalysis["binary_sex"] = dfAnalysis['sex'].map({'M':1, 'F':0})
 
     populations = dfAnalysis["population_name"].unique()
-    print(populations)
     n_populations = len(populations)
     dfResults = pd.DataFrame({"population_name": populations, "coef": 0.0, "p_value": 0.0, "significant": False})
     dfResults.set_index("population_name", inplace=True)
@@ -84,6 +76,23 @@ def get_responder_diff(dfAnalysis, multiple_comparisons = 1.0):
         dfResults.at[population, "significant"] = significant 
     return dfResults
 
+def get_responder_summary(conn):
+    responder_query = """
+        SELECT population_name, response, AVG(percentage), MIN(percentage), MAX(percentage) 
+        FROM analysis
+        GROUP BY response, population_name
+        ORDER BY population_name;
+    """
+    df = get_data(responder_query, conn)
+    return df
+    
+def get_population_fig(dfAnalysis, selected_rows, 
+                       population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"}):
+    fig = px.box(dfAnalysis.loc[selected_rows].replace(population_dict), x="population_name", y="percentage", color="response", 
+                 title="Relative Cell Population Percentage of Sample by Response to Miraclib in Melanoma Patients", 
+                 labels={"population_name": "Cell Population Name", "percentage": "Percentage", "response": "Responded to Miraclib"})
+    return fig
+
 
 if __name__ == "__main__":
     conn = sqlite3.connect("cell-count.db")
@@ -98,6 +107,9 @@ if __name__ == "__main__":
     get_analysis_data_query = "SELECT * FROM analysis;"
     dfAnalysis = get_data(get_analysis_data_query, conn)
     dfAnalysis.to_csv("./output/miraclib_melanoma_subset.csv")
+
+    dfResponderSummary = get_responder_summary(conn)
+    dfResponderSummary.to_csv("./output/miraclib_response_summary.csv")
 
     fig = get_population_fig(dfAnalysis, selected_rows = slice(None))
     fig.write_image("./output/population-percentages.png", width=1200, height=700)

@@ -30,6 +30,9 @@ if __name__ == "__main__":
     fig = analysis.get_population_fig(dfAnalysis, selected_rows)
     st.plotly_chart(fig, theme="streamlit", width="stretch")
 
+    dfResponderSummary = analysis.get_responder_summary(conn)
+    st.table(dfResponderSummary.replace(population_dict).rename(columns={"population_name": "Cell Population Name", "response": "Responded to Miraclib", "AVG(percentage)": "Mean Cell Sample Percentage", "MIN(percentage)": "Minimum Cell Sample Percentage", "MAX(percentage)": "Maximum Cell Sample Percentage"}), hide_index=True)
+
     st.header("Association Between Cell Type and Responder Status")
 
     st.text("The relationship between cell population frequency and miraclib response was evaluated using a linear mixed effects model with subject id as a random effect and response as a main effect to account for the repeated measures at different study time points. Note that statistically significant is not equivalent to clinically relevant.")
