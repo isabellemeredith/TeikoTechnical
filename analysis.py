@@ -108,7 +108,8 @@ def get_counts(df, selection):
 
 
 if __name__ == "__main__":
-    conn = sqlite3.connect("cell-count.db")
+    database_name = "cell-count.db"
+    conn = sqlite3.connect(database_name)
     cursor = conn.cursor()
 
     create_summary_view(conn)
