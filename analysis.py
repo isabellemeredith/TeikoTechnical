@@ -1,8 +1,12 @@
 import pandas as pd
 import sqlite3
 import statsmodels.formula.api as smf
+import plotly.express as px
 
-import utils.display as display
+
+def get_data(data_query, _connection):
+    df = pd.read_sql_query(data_query, _connection)
+    return df
 
 def create_summary_view(conn):
     cursor = conn.cursor()
@@ -33,6 +37,12 @@ def create_analysis_view(conn):
     cursor.execute("DROP VIEW IF EXISTS analysis;")
     cursor.execute(analysis_view_query)
 
+def get_population_fig(dfAnalysis, selected_rows, 
+                       population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"}):
+    fig = px.box(dfAnalysis.loc[selected_rows].replace(population_dict), x="population_name", y="percentage", color="response", 
+                 title="Relative Cell Population Percentages by Response to Miraclib in Melanoma Patients", 
+                 labels={"population_name": "Cell Population Name", "percentage": "Percentage", "response": "Responded to Miraclib"})
+    return fig
 
 def create_project_view(conn):
     cursor = conn.cursor()
@@ -81,20 +91,23 @@ if __name__ == "__main__":
 
     create_summary_view(conn)
     get_summary_data_query = "SELECT * FROM populations_summary;"
-    dfSummary = display.get_data(get_summary_data_query, conn)
+    dfSummary = get_data(get_summary_data_query, conn)
     dfSummary.to_csv("./output/summary.csv")
 
     create_analysis_view(conn)
     get_analysis_data_query = "SELECT * FROM analysis;"
-    dfAnalysis = display.get_data(get_analysis_data_query, conn)
+    dfAnalysis = get_data(get_analysis_data_query, conn)
     dfAnalysis.to_csv("./output/miraclib_melanoma_subset.csv")
 
+    fig = get_population_fig(dfAnalysis, selected_rows = slice(None))
+    fig.write_image("./output/population-percentages.png", width=1200, height=700)
+
     dfResults = get_responder_diff(dfAnalysis)
-    dfResults.to_csv()
+    dfResults.to_csv("./output/miraclib_response_analysis_results.csv")
 
     create_project_view(conn)
     get_project_data_query = "SELECT * FROM projects_summary ORDER BY project_id_text;"
-    dfProjects = display.get_data(get_project_data_query, conn)
+    dfProjects = get_data(get_project_data_query, conn)
     dfProjects.to_csv("./output/miraclib_melanoma_baseline_subset.csv")
 
     get_part_five_average_query = """

@@ -27,23 +27,15 @@ if __name__ == "__main__":
 
     population_dict = {"b_cell" : "B Cell", "cd4_t_cell": "CD4 T Cell", "cd8_t_cell": "CD8 T Cell", "nk_cell": "NK Cell", "monocyte": "Monocyte"}
 
-    fig = px.box(dfAnalysis.loc[selected_rows].replace(population_dict), x="population_name", y="percentage", color="response", 
-                 title="Relative Cell Population Percentages by Response to Miraclib in Melanoma Patients", 
-                 labels={"population_name": "Cell Population Name", "percentage": "Percentage", "response": "Responded to Miraclib"})
+    fig = analysis.get_population_fig(dfAnalysis, selected_rows)
     st.plotly_chart(fig, theme="streamlit", width="stretch")
 
     st.header("Association Between Cell Type and Responder Status")
 
     st.text("The relationship between cell population frequency and miraclib response was evaluated using a linear mixed effects model with subject id as a random effect and response as a main effect to account for the repeated measures at different study time points. Note that statistically significant is not equivalent to clinically relevant.")
 
-    if os.path.exists("./output/analysis_results.csv"):
-        dfResults = pd.read_csv("./output/analysis_results.csv")
-    else:
-        dfResults = analysis.get_responder_diff(dfAnalysis)
+    dfResults = analysis.get_responder_diff(dfAnalysis)
     
-    # dfResults.set_index("population_name", inplace=True)
-    
-    multiple_comparisons = 1.0
     for population in dfAnalysis["population_name"].unique():
         st.subheader(population_dict[population])
 
@@ -52,6 +44,6 @@ if __name__ == "__main__":
             difference = "higher" if coef > 0 else "lower"
             st.text("There was a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.3f}). Responders had {coef:3.2f} {difference} percentage points of {type}s".format(type=population_dict[population], pvalue=dfResults.at[population, "p_value"], coef=coef, difference=difference))
         else:
-            st.text("There was not a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.4f}).".format(type=population_dict[population], pvalue=dfResults.at[population, "p_value"]))
+            st.text("There was not a significant association between response to miraclib and frequency of {type} (p = {pvalue:10.3f}).".format(type=population_dict[population], pvalue=dfResults.at[population, "p_value"]))
         
         
